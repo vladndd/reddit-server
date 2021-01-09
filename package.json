@@ -1,12 +1,12 @@
 {
-  "name": "CaracallTS",
+  "name": "caracall",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "watch": "tsc -w",
     "dev": "nodemon dist/index.js",
     "start": "node dist/index.js",
-    "start2": "ts-node src/index.ts"
+    "create:migration": "mikro-orm migration:create"
   },
   "license": "MIT",
   "devDependencies": {
@@ -23,6 +23,7 @@
     "@mikro-orm/postgresql": "^4.3.4",
     "@types/validator": "^13.1.2",
     "apollo-server-express": "^2.19.1",
+    "argon2": "^0.27.1",
     "class-validator": "^0.12.2",
     "express": "^4.17.1",
     "graphql": "^15.4.0",
