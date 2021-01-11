@@ -78,23 +78,23 @@ export class UserResolver {
       };
     }
 
-    if (options.password.length <= 2) {
-      return {
-        errors: [
-          {
-            field: "password",
-            message: "password must be greater than 2",
-          },
-        ],
-      };
-    }
-
     if (EmailValidator.validate(options.email) === false) {
       return {
         errors: [
           {
             field: "email",
             message: "invalid email",
+          },
+        ],
+      };
+    }
+
+    if (options.password.length <= 2) {
+      return {
+        errors: [
+          {
+            field: "password",
+            message: "password must be greater than 2",
           },
         ],
       };
