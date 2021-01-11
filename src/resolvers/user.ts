@@ -109,12 +109,12 @@ export class UserResolver {
     try {
       await em.persistAndFlush(user);
     } catch (e) {
-      if (e.code === "2305" || e.detail.includes("already exists")) {
+      if (e.detail.includes("already exists")) {
         return {
           errors: [
             {
-              field: "username | email",
-              message: "username | email already taken",
+              field: "username",
+              message: "username or email already taken",
             },
           ],
         };
