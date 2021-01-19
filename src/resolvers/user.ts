@@ -13,6 +13,7 @@ import {
 
 import argon2 from "argon2";
 import * as EmailValidator from "email-validator";
+import { __cookie_name__ } from "../consts";
 
 @InputType()
 class RegisterInput {
@@ -53,13 +54,12 @@ class UserResponse {
 export class UserResolver {
   @Query(() => User, { nullable: true })
   async me(@Ctx() { req, em }: MyContext) {
-    console.log('session: ' , req.session)
     if (!req.session.userId) {
       return null;
     }
 
-    const user = await em.findOne(User, {id: req.session.userId})
-    return user
+    const user = await em.findOne(User, { id: req.session.userId });
+    return user;
   }
 
   @Mutation(() => UserResponse)
@@ -123,7 +123,7 @@ export class UserResolver {
 
     // store user id session ,
     // set a cookie and keep user logged in
-    req.session.userId = user.id 
+    req.session.userId = user.id;
 
     return {
       user,
@@ -163,5 +163,21 @@ export class UserResolver {
     return {
       user,
     };
+  }
+
+  @Mutation(() => Boolean)
+  logout(@Ctx() { req, res }: MyContext) {
+    return new Promise((resolve) =>
+      req.session.destroy((err) => {
+        if (err) {
+          console.log(err);
+          resolve(false);
+          return;
+        }
+
+        res.clearCookie(__cookie_name__);
+        resolve(true);
+      })
+    );
   }
 }
