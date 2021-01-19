@@ -4,7 +4,6 @@ import {
   Resolver,
   Mutation,
   Arg,
-  InputType,
   Field,
   Ctx,
   ObjectType,
@@ -14,24 +13,8 @@ import {
 import argon2 from "argon2";
 import * as EmailValidator from "email-validator";
 import { __cookie_name__ } from "../consts";
-
-@InputType()
-class RegisterInput {
-  @Field()
-  username: string;
-  @Field()
-  password: string;
-  @Field()
-  email: string;
-}
-
-@InputType()
-class LoginInput {
-  @Field()
-  username: string;
-  @Field()
-  password: string;
-}
+import { RegisterInput } from "./RegisterInput";
+import { validateRegsiter } from "../utils/validateRegister";
 
 @ObjectType()
 class FieldError {
@@ -44,7 +27,7 @@ class FieldError {
 @ObjectType()
 class UserResponse {
   @Field(() => [FieldError], { nullable: true })
-  errors?: [FieldError];
+  errors?: FieldError[];
 
   @Field(() => User, { nullable: true })
   user?: User;
@@ -52,6 +35,11 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Mutation(() => Boolean)
+  async forgotPassword(@Ctx() { em }: MyContext) {
+    // const user = await em.findOne(User);
+  }
+
   @Query(() => User, { nullable: true })
   async me(@Ctx() { req, em }: MyContext) {
     if (!req.session.userId) {
@@ -67,37 +55,10 @@ export class UserResolver {
     @Arg("options") options: RegisterInput,
     @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
-    if (options.username.length <= 2) {
-      return {
-        errors: [
-          {
-            field: "username",
-            message: "length must be greater than 2",
-          },
-        ],
-      };
-    }
+    const errors = validateRegsiter(options);
 
-    if (EmailValidator.validate(options.email) === false) {
-      return {
-        errors: [
-          {
-            field: "email",
-            message: "invalid email",
-          },
-        ],
-      };
-    }
-
-    if (options.password.length <= 2) {
-      return {
-        errors: [
-          {
-            field: "password",
-            message: "password must be greater than 2",
-          },
-        ],
-      };
+    if (errors) {
+      return { errors };
     }
 
     const hashedPassword = await argon2.hash(options.password);
@@ -132,21 +93,27 @@ export class UserResolver {
 
   @Mutation(() => UserResponse)
   async login(
-    @Arg("options") options: LoginInput,
+    @Arg("usernameOrEmail") usernameOrEmail: string,
+    @Arg("password") password: string,
     @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
-    const user = await em.findOne(User, { username: options.username });
+    const user = await em.findOne(
+      User,
+      EmailValidator.validate(usernameOrEmail) === true
+        ? { email: usernameOrEmail }
+        : { username: usernameOrEmail }
+    );
     if (!user) {
       return {
         errors: [
           {
-            field: "username",
+            field: "usernameOrEmail",
             message: "couldnt find a user",
           },
         ],
       };
     }
-    const valid = await argon2.verify(user.password, options.password);
+    const valid = await argon2.verify(user.password, password);
     if (!valid) {
       return {
         errors: [
