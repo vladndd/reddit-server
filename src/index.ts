@@ -1,21 +1,29 @@
 import "reflect-metadata";
-import { MikroORM } from "@mikro-orm/core";
 import { __prod__, __cookie_name__, __port__ } from "./consts";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
-import microConfig from "./mikro-orm.config";
 import express from "express";
 import Redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
 import cors from "cors";
+import {createConnection} from "typeorm"
+import { Post } from "./entities/Post";
+import { User } from "./entities/User";
 
 const main = async () => {
-  const orm = await MikroORM.init(microConfig);
-  await orm.getMigrator().up();
+  const conn =  await createConnection({
+    type: 'postgres',
+    database: 'caracall',
+    username: 'vladyslav',
+    password: 'new-password',
+    logging: true,
+    synchronize: true,
+    entities: [Post, User]
+  })
 
   const app = express();
 
@@ -52,7 +60,7 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }) => ({ em: orm.em, req, res, redis }),
+    context: ({ req, res }) => ({  req, res, redis }),
   });
 
   apolloServer.applyMiddleware({
