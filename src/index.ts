@@ -10,20 +10,20 @@ import Redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
 import cors from "cors";
-import {createConnection} from "typeorm"
+import { createConnection } from "typeorm";
 import { Post } from "./entities/Post";
 import { User } from "./entities/User";
 
 const main = async () => {
-  const conn =  await createConnection({
-    type: 'postgres',
-    database: 'caracall',
-    username: 'vladyslav',
-    password: 'new-password',
+  const conn = await createConnection({
+    type: "postgres",
+    database: "caracall",
+    username: "vladyslav",
+    password: "new-password",
     logging: true,
     synchronize: true,
-    entities: [Post, User]
-  })
+    entities: [Post, User],
+  });
 
   const app = express();
 
@@ -60,7 +60,7 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }) => ({  req, res, redis }),
+    context: ({ req, res }) => ({ req, res, redis }),
   });
 
   apolloServer.applyMiddleware({
