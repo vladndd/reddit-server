@@ -61,13 +61,15 @@ export class PostResolver {
 
     const currentPost = await Post.findOne({ id: postId });
 
-    await Post.update(
-      { id: postId },
-      {
-        points: currentPost!.points + realValue,
-      }
-    );
-    
+    if (currentPost) {
+      await Post.update(
+        { id: postId },
+        {
+          points: currentPost.points + realValue,
+        }
+      );
+    } 
+
     // or like that::
 
     // await getConnection().query(
