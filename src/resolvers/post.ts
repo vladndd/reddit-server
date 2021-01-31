@@ -50,21 +50,40 @@ export class PostResolver {
   ) {
     const isUpdoot = value !== -1;
     const realValue = isUpdoot ? 1 : -1;
+
     const { userId } = req.session;
+
     await Updoot.insert({
       userId,
       postId,
       value: realValue,
     });
 
-    await getConnection().query(
-      `
-    update post
-    set points = points + $1
-    where id = $2
-    `,
-      [realValue, postId]
+    const currentPost = await Post.findOne({ id: postId });
+
+    await Post.update(
+      { id: postId },
+      {
+        points: currentPost!.points + realValue,
+      }
     );
+    
+    // or like that::
+
+    // await getConnection().query(
+    //   `
+    //   START TRANSACTION;
+
+    //   insert into updoot ("userId", "postId", value)
+    //   values(${userId},${postId},${realValue});
+
+    //   update post
+    //   set points = points + ${realValue}
+    //   where id = ${postId}
+
+    //   COMMIT;
+    //   `
+    // );
 
     return true;
   }
